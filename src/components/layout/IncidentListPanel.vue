@@ -63,7 +63,7 @@ function toggleCollapse() {
         No hay incidentes recientes.
       </div>
 
-      <div v-else class="max-h-[500px] overflow-y-auto custom-scrollbar">
+      <div v-else class="max-h-[380px] overflow-y-auto custom-scrollbar">
         <!-- Incident Card (Similar to Flutter IncidentCard) -->
         <div
           v-for="incident in incidents"
