@@ -11,6 +11,24 @@ export const useIncidentsStore = defineStore('incidents', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
+
+  // Helper to decode Base64 strings safely
+  function decodeBase64(str: string): string {
+    if (!str) return ''
+    try {
+      // Decode base64 to utf8 string handling special characters
+      return decodeURIComponent(
+        atob(str)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      )
+    } catch (e) {
+      console.warn('Failed to decode base64 description:', e)
+      return str
+    }
+  }
+
   // Actions
   async function fetchAllIncidents(): Promise<void> {
     isLoading.value = true
@@ -18,7 +36,10 @@ export const useIncidentsStore = defineStore('incidents', () => {
 
     try {
       const response = await api.get<Incident[]>('/incidents')
-      incidents.value = response.data
+      incidents.value = response.data.map((incident) => ({
+        ...incident,
+        description: decodeBase64(incident.description),
+      }))
     } catch (err) {
       error.value = 'Error al cargar los incidentes'
       throw err
@@ -33,8 +54,12 @@ export const useIncidentsStore = defineStore('incidents', () => {
 
     try {
       const response = await api.get<IncidentDetail>(`/incidents/${id}`)
-      selectedIncident.value = response.data
-      return response.data
+      const decodedIncident = {
+        ...response.data,
+        description: decodeBase64(response.data.description),
+      }
+      selectedIncident.value = decodedIncident
+      return decodedIncident
     } catch (err) {
       error.value = 'Error al cargar el detalle del incidente'
       throw err
